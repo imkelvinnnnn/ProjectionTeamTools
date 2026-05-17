@@ -368,7 +368,8 @@
     async function loadChapter() {
       const book = document.getElementById('bookSelect').value;
       const chapter = document.getElementById('chapterInput').value;
-      const encodingMode = document.getElementById('encodingSelect').value;
+      const encodingMode = 'gbk';
+      //const encodingMode = document.getElementById('encodingSelect').value;
       const path = `https://imkelvinnnnn.github.io/BibleScriptureForCanva/OnlineBible/OnlineBible/hgb/${book}/${book}${chapter}.htm`;
 
       try {
