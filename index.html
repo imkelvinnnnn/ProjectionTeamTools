@@ -413,7 +413,7 @@
         if (tds.length < 2) return;
 
         const refText = tds[0].textContent.replace(/\s+/g, '').trim();
-        const verseText = tds[1].textContent.replace(/\s+/g, ' ').trim();
+        const verseText = tds[1].textContent.replace(/[\s\u3000]+/g, '').trim();
 
         if (!refText || !verseText) return;
 
