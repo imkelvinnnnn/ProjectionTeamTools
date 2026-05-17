@@ -1,598 +1,485 @@
 <!DOCTYPE html>
 <html lang="zh">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>圣经经文转Excel工具</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<style>
-  :root {
-    --bg: #f5f2ed;
-    --surface: #ffffff;
-    --surface2: #f0ece6;
-    --border: rgba(0,0,0,0.09);
-    --border-hover: rgba(0,0,0,0.18);
-    --text: #1e1a15;
-    --text-muted: #6b6560;
-    --text-dim: #a09890;
-    --accent: #8b5e2a;
-    --accent-dark: #6b4418;
-    --accent-glow: rgba(139,94,42,0.08);
-    --success: #2e7d4f;
-    --danger: #a33030;
-    --radius: 10px;
-    --radius-lg: 16px;
-  }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>离线圣经 Excel 导出工具</title>
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/encoding.js/2.1.0/encoding.min.js"></script>
 
-  body {
-    background: var(--surface);
-    color: var(--text);
-    font-family: 'Georgia', '宋体', serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 2rem 1rem 4rem;
-  }
+  <style>
+    :root {
+      --bg: #f5f2ed;
+      --surface: #ffffff;
+      --surface2: #f0ece6;
+      --border: rgba(0, 0, 0, 0.09);
+      --text: #1e1a15;
+      --text-muted: #6b6560;
+      --accent: #8b5e2a;
+      --success: #2e7d4f;
+      --radius: 10px;
+      --radius-lg: 16px;
+    }
 
-  .header {
-    text-align: center;
-    margin-bottom: 2.5rem;
-  }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-  .header-cross {
-    font-size: 2rem;
-    color: var(--accent);
-    letter-spacing: 0.1em;
-    margin-bottom: 0.5rem;
-    opacity: 0.8;
-  }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: Georgia, "Microsoft YaHei", "宋体", serif;
+      min-height: 100vh;
+      padding: 2rem 1rem 4rem;
+    }
 
-  h1 {
-    font-size: 1.8rem;
-    font-weight: 400;
-    letter-spacing: 0.05em;
-    color: var(--text);
-    margin-bottom: 0.4rem;
-  }
+    .container {
+      max-width: 900px;
+      margin: auto;
+    }
 
-  .subtitle {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    font-family: 'Georgia', serif;
-    font-style: italic;
-  }
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
 
-  .card {
-    background: var(--surface);
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 1.75rem;
-    width: 100%;
-    max-width: 760px;
-    margin-bottom: 1.25rem;
-  }
+    .header h1 {
+      font-weight: 400;
+      margin-bottom: 0.5rem;
+    }
 
-  .card-title {
-    font-size: 0.7rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 1.1rem;
-    font-family: 'Georgia', sans-serif;
-  }
+    .subtitle {
+      color: var(--text-muted);
+      font-style: italic;
+      font-size: 0.9rem;
+    }
 
-  .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      margin-bottom: 1.2rem;
+    }
 
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
+    .card-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
 
-  label {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    font-family: 'Georgia', sans-serif;
-  }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
 
-  select, input[type="text"], input[type="number"] {
-    background: var(--surface2);
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--text);
-    font-size: 0.95rem;
-    font-family: 'Georgia', '宋体', serif;
-    padding: 0.65rem 0.9rem;
-    width: 100%;
-    outline: none;
-    transition: border-color 0.2s;
-    appearance: none;
-    -webkit-appearance: none;
-  }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
 
-  select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238a8680' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 0.9rem center;
-    padding-right: 2.2rem;
-  }
+    label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
 
-  select:focus, input:focus {
-    border-color: var(--accent);
-    background: rgba(201,169,110,0.04);
-  }
+    select,
+    input,
+    button {
+      font-family: inherit;
+    }
 
-  select option[disabled] {
-    color: var(--text-dim);
-    background: var(--surface);
-    font-style: italic;
-  }
+    select,
+    input[type="number"] {
+      padding: 0.7rem 0.9rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      font-size: 0.95rem;
+      outline: none;
+    }
 
-  textarea {
-    background: var(--surface2);
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--text);
-    font-size: 0.9rem;
-    font-family: 'Georgia', '宋体', serif;
-    padding: 0.9rem;
-    width: 100%;
-    min-height: 240px;
-    resize: vertical;
-    outline: none;
-    line-height: 1.7;
-    transition: border-color 0.2s;
-  }
+    button {
+      border: none;
+      border-radius: var(--radius);
+      padding: 0.75rem 1.2rem;
+      cursor: pointer;
+      font-size: 0.92rem;
+      transition: opacity 0.2s;
+    }
 
-  textarea:focus {
-    border-color: var(--accent);
-    background: rgba(201,169,110,0.03);
-  }
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
 
-  textarea::placeholder {
-    color: var(--text-dim);
-    font-style: italic;
-    font-size: 0.85rem;
-  }
+    .btn-primary:hover {
+      opacity: 0.92;
+    }
 
-  .btn-row {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
 
-  button {
-    font-family: 'Georgia', serif;
-    font-size: 0.9rem;
-    padding: 0.65rem 1.5rem;
-    border-radius: var(--radius);
-    border: 0.5px solid var(--border);
-    cursor: pointer;
-    transition: all 0.18s;
-    letter-spacing: 0.03em;
-  }
+    .btn-success:hover {
+      opacity: 0.92;
+    }
 
-  .btn-primary {
-    background: var(--accent);
-    color: #ffffff;
-    border-color: var(--accent);
-    font-weight: 600;
-  }
+    .btn-row {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
 
-  .btn-primary:hover {
-    background: #d9b87e;
-    border-color: #d9b87e;
-  }
+    .status {
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
 
-  .btn-secondary {
-    background: transparent;
-    color: var(--text-muted);
-    border-color: var(--border);
-  }
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
 
-  .btn-secondary:hover {
-    border-color: var(--border-hover);
-    color: var(--text);
-    background: var(--surface2);
-  }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
 
-  .btn-export {
-    background: var(--success);
-    color: #fff;
-    border-color: var(--success);
-    font-weight: 600;
-    margin-left: auto;
-  }
+    th {
+      background: var(--surface2);
+      color: var(--accent);
+      text-align: left;
+      padding: 0.8rem 1rem;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+    }
 
-  .btn-export:hover {
-    background: #5ab07a;
-    border-color: #5ab07a;
-  }
+    td {
+      padding: 0.8rem 1rem;
+      border-top: 1px solid var(--border);
+      line-height: 1.7;
+      vertical-align: top;
+    }
 
-  .btn-export:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-  }
+    .ref {
+      white-space: nowrap;
+      color: var(--accent);
+      font-weight: bold;
+    }
 
-  .preview-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1.1rem;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-  }
+    .empty {
+      padding: 2rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-style: italic;
+    }
 
-  .verse-count {
-    font-size: 0.78rem;
-    color: var(--text-dim);
-    background: var(--surface2);
-    border: 0.5px solid var(--border);
-    border-radius: 20px;
-    padding: 0.2rem 0.8rem;
-    font-family: 'Georgia', sans-serif;
-  }
-
-  .preview-table-wrap {
-    overflow-x: auto;
-    border-radius: var(--radius);
-    border: 0.5px solid var(--border);
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.88rem;
-  }
-
-  thead tr {
-    background: var(--surface2);
-    border-bottom: 0.5px solid var(--border);
-  }
-
-  th {
-    padding: 0.6rem 1rem;
-    text-align: left;
-    font-size: 0.72rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--accent);
-    font-weight: 400;
-    font-family: 'Georgia', sans-serif;
-    white-space: nowrap;
-  }
-
-  td {
-    padding: 0.55rem 1rem;
-    border-bottom: 0.5px solid var(--border);
-    vertical-align: top;
-    line-height: 1.6;
-  }
-
-  tr:last-child td { border-bottom: none; }
-
-  tbody tr:hover { background: rgba(255,255,255,0.02); }
-
-  .ref-cell {
-    color: var(--accent);
-    white-space: nowrap;
-    font-size: 0.82rem;
-    font-family: 'Georgia', sans-serif;
-  }
-
-  .verse-cell {
-    color: var(--text);
-    max-width: 560px;
-  }
-
-  .empty-state {
-    text-align: center;
-    padding: 2.5rem 1rem;
-    color: var(--text-dim);
-    font-style: italic;
-    font-size: 0.9rem;
-  }
-
-  .msg {
-    font-size: 0.82rem;
-    padding: 0.6rem 0.9rem;
-    border-radius: var(--radius);
-    margin-top: 0.75rem;
-    display: none;
-  }
-
-  .msg.error { background: rgba(194,94,94,0.12); color: #e88; border: 0.5px solid rgba(194,94,94,0.3); display: block; }
-  .msg.success { background: rgba(74,158,107,0.12); color: #6dbf8f; border: 0.5px solid rgba(74,158,107,0.3); display: block; }
-
-  .divider {
-    border: none;
-    border-top: 0.5px solid var(--border);
-    margin: 1.25rem 0;
-  }
-
-  @media (max-width: 520px) {
-    .form-row { grid-template-columns: 1fr; }
-    h1 { font-size: 1.4rem; }
-    .card { padding: 1.25rem; }
-  }
-</style>
+    @media (max-width: 600px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<div class="header">
-  <div class="header-cross">✦ ✦ ✦</div>
-  <h1>圣经经文转换工具</h1>
-  <p class="subtitle">Bible Scripture → Excel Exporter</p>
-</div>
+  <div class="container">
 
-<div class="card">
-  <div class="card-title">第一步 — 选择书卷 &amp; 章节</div>
-  <div class="form-row">
-    <div class="form-group">
-      <label>书卷 Book</label>
-      <select id="bookSelect">
-        <option value="" disabled selected>— 请选择书卷 —</option>
-        <optgroup label="═══ 旧约 Old Testament ═══">
-          <option>创世记</option><option>出埃及记</option><option>利未记</option>
-          <option>民数记</option><option>申命记</option><option>约书亚记</option>
-          <option>士师记</option><option>路得记</option><option>撒母耳记上</option>
-          <option>撒母耳记下</option><option>列王纪上</option><option>列王纪下</option>
-          <option>历代志上</option><option>历代志下</option><option>以斯拉记</option>
-          <option>尼希米记</option><option>以斯帖记</option><option>约伯记</option>
-          <option>诗篇</option><option>箴言</option><option>传道书</option>
-          <option>雅歌</option><option>以赛亚书</option><option>耶利米书</option>
-          <option>耶利米哀歌</option><option>以西结书</option><option>但以理书</option>
-          <option>何西阿书</option><option>约珥书</option><option>阿摩司书</option>
-          <option>俄巴底亚书</option><option>约拿书</option><option>弥迦书</option>
-          <option>那鸿书</option><option>哈巴谷书</option><option>西番雅书</option>
-          <option>哈该书</option><option>撒迦利亚书</option><option>玛拉基书</option>
-        </optgroup>
-        <optgroup label="═══ 新约 New Testament ═══">
-          <option>马太福音</option><option>马可福音</option><option>路加福音</option>
-          <option>约翰福音</option><option>使徒行传</option><option>罗马书</option>
-          <option>哥林多前书</option><option>哥林多后书</option><option>加拉太书</option>
-          <option>以弗所书</option><option>腓立比书</option><option>歌罗西书</option>
-          <option>帖撒罗尼迦前书</option><option>帖撒罗尼迦后书</option><option>提摩太前书</option>
-          <option>提摩太后书</option><option>提多书</option><option>腓利门书</option>
-          <option>希伯来书</option><option>雅各书</option><option>彼得前书</option>
-          <option>彼得后书</option><option>约翰一书</option><option>约翰二书</option>
-          <option>约翰三书</option><option>犹大书</option><option>启示录</option>
-        </optgroup>
-      </select>
+    <div class="header">
+      <h1>离线圣经 Excel 导出工具</h1>
+      <div class="subtitle">Offline Bible Scripture Exporter</div>
     </div>
-    <div class="form-group">
-      <label>章 Chapter</label>
-      <input type="number" id="chapterInput" placeholder="例如：1" min="1" max="150">
+
+    <div class="card">
+      <div class="card-title">第一步 — 检查环境与说明</div>
+      <div class="status">
+        当前配置：已关联本地代码库中的 <code>./OnlineBible/OnlineBible/hgb/</code> 文件夹。请确保该路径及文件真实存在。
+      </div>
     </div>
+
+    <div class="card">
+      <div class="card-title">第二步 — 选择书卷与章节</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>书卷 Book</label>
+          <select id="bookSelect">
+            <option value="gen">创世记</option>
+            <option value="exo">出埃及记</option>
+            <option value="lev">利未记</option>
+            <option value="num">民数记</option>
+            <option value="deu">申命记</option>
+            <option value="jos">约书亚记</option>
+            <option value="jdg">士师记</option>
+            <option value="rut">路得记</option>
+            <option value="1sa">撒母耳记上</option>
+            <option value="2sa">撒母耳记下</option>
+            <option value="1ki">列王纪上</option>
+            <option value="2ki">列王纪下</option>
+            <option value="1ch">历代志上</option>
+            <option value="2ch">历代志下</option>
+            <option value="ezr">以斯拉记</option>
+            <option value="neh">尼希米记</option>
+            <option value="est">以斯帖记</option>
+            <option value="job">约伯记</option>
+            <option value="psa">诗篇</option>
+            <option value="pro">箴言</option>
+            <option value="ecc">传道书</option>
+            <option value="sng">雅歌</option>
+            <option value="isa">以赛亚书</option>
+            <option value="jer">耶利米书</option>
+            <option value="lam">耶利米哀歌</option>
+            <option value="ezk">以西结书</option>
+            <option value="dan">但以理书</option>
+            <option value="hos">何西阿书</option>
+            <option value="jol">约珥书</option>
+            <option value="amo">阿摩司书</option>
+            <option value="oba">俄巴底亚书</option>
+            <option value="jon">约拿书</option>
+            <option value="mic">弥迦书</option>
+            <option value="nam">那鸿书</option>
+            <option value="hab">哈巴谷书</option>
+            <option value="zep">西番雅书</option>
+            <option value="hag">哈该书</option>
+            <option value="zec">撒迦利亚书</option>
+            <option value="mal">玛拉基书</option>
+            <option value="mat">马太福音</option>
+            <option value="mrk">马可福音</option>
+            <option value="luk">路加福音</option>
+            <option value="jhn">约翰福音</option>
+            <option value="act">使徒行传</option>
+            <option value="rom">罗马书</option>
+            <option value="1co">哥林多前书</option>
+            <option value="2co">哥林多后书</option>
+            <option value="gal">加拉太书</option>
+            <option value="eph">以弗所书</option>
+            <option value="php">腓立比书</option>
+            <option value="col">歌罗西书</option>
+            <option value="1th">帖撒罗尼迦前书</option>
+            <option value="2th">帖撒罗尼迦后书</option>
+            <option value="1ti">提摩太前书</option>
+            <option value="2ti">提摩太后书</option>
+            <option value="tit">提多书</option>
+            <option value="phm">腓利门书</option>
+            <option value="heb">希伯来书</option>
+            <option value="jas">雅各书</option>
+            <option value="1pe">彼得前书</option>
+            <option value="2pe">彼得后书</option>
+            <option value="1jn">约翰一书</option>
+            <option value="2jn">约翰二书</option>
+            <option value="3jn">约翰三书</option>
+            <option value="jud">犹大书</option>
+            <option value="rev">启示录</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>章节 Chapter</label>
+          <input type="number" id="chapterInput" min="1" value="1">
+        </div>
+      </div>
+
+      <div class="btn-row" style="margin-top:1rem;">
+        <button class="btn-primary" onclick="loadChapter()">
+          加载章节
+        </button>
+
+        <button class="btn-success" onclick="exportExcel()">
+          导出 Excel
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">第三步 — 经文预览</div>
+
+      <div id="verseCount" class="status">
+        0 节经文
+      </div>
+
+      <div class="table-wrap" style="margin-top:1rem;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:160px;">Reference</th>
+              <th>Verse</th>
+            </tr>
+          </thead>
+
+          <tbody id="previewBody">
+            <tr>
+              <td colspan="2">
+                <div class="empty">
+                  请先加载章节
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
-</div>
 
-<div class="card">
-  <div class="card-title">第二步 — 粘贴经文内容</div>
-  <textarea id="scriptureInput" placeholder="在此粘贴从圣经网站复制的经文内容...
+  <script>
+    let parsedVerses = [];
 
-支持自动处理：
-• 去除标题行（如"耶稣基督降生"）
-• 去除脚注标记（如 [A]、[B]）
-• 去除粗体/超链接标记（如 __文字__ 格式）
-• 自动识别节次数字并分行"></textarea>
-  <div id="parseMsg" class="msg"></div>
-  <div class="btn-row" style="margin-top: 1rem;">
-    <button class="btn-primary" onclick="parseScripture()">✦ 解析经文</button>
-    <button class="btn-secondary" onclick="clearAll()">清除</button>
-  </div>
-</div>
+    const BOOK_NAMES = {
+      gen: '创世记', exo: '出埃及记', lev: '利未记', num: '民数记', deu: '申命记',
+      jos: '约书亚记', jdg: '士师记', rut: '路得记', '1sa': '撒母耳记上', '2sa': '撒母耳记下',
+      '1ki': '列王纪上', '2ki': '列王纪下', '1ch': '历代志上', '2ch': '历代志下', ezr: '以斯拉记',
+      neh: '尼希米记', est: '以斯帖记', job: '约伯记', psa: '诗篇', pro: '箴言',
+      ecc: '传道书', sng: '雅歌', isa: '以赛亚书', jer: '耶利米书', lam: '耶利米哀歌',
+      ezk: '以西结书', dan: '但以理书', hos: '何西阿书', jol: '约珥书', amo: '阿摩司书',
+      oba: '俄巴底亚书', jon: '约拿书', mic: '弥迦书', nam: '那鸿书', hab: '哈巴谷书',
+      zep: '西番雅书', hag: '哈该书', zec: '撒迦利亚书', mal: '玛拉基书', mat: '马太福音',
+      mrk: '马可福音', luk: '路加福音', jhn: '约翰福音', act: '使徒行传', rom: '罗马书',
+      '1co': '哥林多前书', '2co': '哥林多后书', gal: '加拉太书', eph: '以弗所书', php: '腓立比书',
+      col: '歌罗西书', '1th': '帖撒罗尼迦前书', '2th': '帖撒罗尼迦后书', '1ti': '提摩太前书', '2ti': '提摩太后书',
+      tit: '提多书', phm: '腓利门书', heb: '希伯来书', jas: '雅各书', '1pe': '彼得前书',
+      '2pe': '彼得后书', '1jn': '约翰一书', '2jn': '约翰二书', '3jn': '约翰三书', jud: '犹大书',
+      rev: '启示录'
+    };
 
-<div class="card" id="previewCard">
-  <div class="preview-header">
-    <div class="card-title" style="margin-bottom:0;">第三步 — 预览 &amp; 导出</div>
-    <span class="verse-count" id="verseCount">0 节</span>
-    <button class="btn-export" id="exportBtn" onclick="exportExcel()" disabled>↓ 导出 Excel</button>
-  </div>
-  <hr class="divider">
-  <div class="preview-table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th style="width:140px">参考 Reference</th>
-          <th>经文 Verse</th>
-        </tr>
-      </thead>
-      <tbody id="previewBody">
-        <tr><td colspan="2"><div class="empty-state">解析经文后将在此显示预览</div></td></tr>
-      </tbody>
-    </table>
-  </div>
-</div>
+    async function loadChapter() {
+      const book = document.getElementById('bookSelect').value;
+      const chapter = document.getElementById('chapterInput').value;
+      const path = `./OnlineBible/OnlineBible/hgb/${book}/${book}${chapter}.htm`;
 
-<script>
-let parsedVerses = [];
+      try {
+        const response = await fetch(path);
 
-function cleanText(raw) {
-  let text = raw;
+        if (!response.ok) {
+          throw new Error('File not found');
+        }
 
-  // Remove markdown bold/italic links: __[A](url)__ __[B](url)__
-  text = text.replace(/__\[([A-Za-z0-9]+)\]\([^)]*\)__/g, '');
-  // Remove plain footnote refs like [A] [B] [1] [2]
-  text = text.replace(/\[([A-Za-z0-9]+)\]/g, '');
-  // Remove markdown bold markers __text__ -> text
-  text = text.replace(/__([^_]+)__/g, '$1');
-  // Remove markdown italic *text*
-  text = text.replace(/\*([^*]+)\*/g, '$1');
-  // Remove HTML tags if any
-  text = text.replace(/<[^>]+>/g, '');
-  // Remove hyperlinks [text](url)
-  text = text.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1');
+        const arrayBuffer = await response.arrayBuffer();
+        const uint8 = new Uint8Array(arrayBuffer);
 
-  return text;
-}
+        const html = Encoding.convert(uint8, {
+          to: 'UNICODE',
+          from: 'GB2312',
+          type: 'string'
+        });
 
-function isTitle(line) {
-  const trimmed = line.trim();
-  if (!trimmed) return false;
-  if (/^\d/.test(trimmed)) return false;
-  // Only drop parenthetical cross-references like （路2·1—7）
-  if (/^[（(][\u4e00-\u9fff A-Za-z]/.test(trimmed)) return true;
-  // Everything else (poetry, continuation, section headings) is handled
-  // by context: if no verse is open yet, non-digit lines are ignored naturally
-  return false;
-}
+        parseHTML(html, book, chapter);
 
-function parseScripture() {
-  const book = document.getElementById('bookSelect').value;
-  const chap = document.getElementById('chapterInput').value.trim();
-  const raw = document.getElementById('scriptureInput').value;
-  const msg = document.getElementById('parseMsg');
-
-  msg.className = 'msg';
-
-  if (!book) { showMsg('error', '请先选择书卷。'); return; }
-  if (!chap) { showMsg('error', '请输入章节号码。'); return; }
-  if (!raw.trim()) { showMsg('error', '请粘贴经文内容。'); return; }
-
-  // Step 1: Clean markdown/footnotes from the whole text
-  let cleaned = cleanText(raw);
-
-  // Step 2: Normalize line endings
-  cleaned = cleaned.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-
-  // Step 3: Inline verses — verses within a line are separated by the verse number
-  // Pattern: numbers like " 3 " mid-line signal a new verse
-  // We need to split on verse number patterns that appear mid-sentence
-  // Replace " N " (space + digits + space) at mid-line with newline + number
-  // But only when the digit group is a valid verse number (not part of a year or long number)
-  // Strategy: insert newlines before verse numbers that appear mid-line
-  cleaned = cleaned.replace(/(?<!\d)\s+(\d{1,3})\s+(?=[\u4e00-\u9fff「『（])/g, '\n$1 ');
-
-  // Step 4: Split into lines
-  const lines = cleaned.split('\n');
-
-  const verses = [];
-  let currentVerseNum = null;
-  let currentText = [];
-
-  function flushVerse() {
-    if (currentVerseNum !== null && currentText.length > 0) {
-      const text = currentText.join(' ').replace(/\s+/g, ' ').trim();
-      if (text) verses.push({ num: currentVerseNum, text });
-    }
-    currentVerseNum = null;
-    currentText = [];
-  }
-
-  for (let line of lines) {
-    line = line.trim();
-    if (!line) continue;
-
-    // Skip title lines (section headings)
-    if (isTitle(line)) continue;
-
-    // Check if line starts with a verse number
-    const verseMatch = line.match(/^(\d{1,3})\s+([\s\S]+)/);
-    if (verseMatch) {
-      flushVerse();
-      currentVerseNum = parseInt(verseMatch[1]);
-      const rest = verseMatch[2].trim();
-      if (rest) currentText.push(rest);
-    } else {
-      // Continuation of current verse (poetry, quoted text, parenthetical)
-      // Only skip if we haven't started any verse yet
-      if (currentVerseNum !== null) {
-        currentText.push(line);
+      } catch (err) {
+        console.error(err);
+        alert(`无法读取章节文件：${path}\n请检查本地路径、文件名大小写是否完全一致。`);
       }
-      // else: ignore (pre-verse section headings before verse 1)
     }
-  }
-  flushVerse();
 
-  if (verses.length === 0) {
-    showMsg('error', '未能解析出任何节次，请检查格式。确保经文以数字开头（如"1 ..."）。');
-    return;
-  }
+    function parseHTML(html, book, chapter) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const rows = doc.querySelectorAll('tr');
+      const verses = [];
 
-  parsedVerses = verses.map(v => ({
-    ref: `${book} ${chap}:${v.num}`,
-    text: v.text
-  }));
+      rows.forEach(row => {
+        const tds = row.querySelectorAll('td');
+        if (tds.length < 2) return;
 
-  renderPreview();
-  showMsg('success', `成功解析 ${parsedVerses.length} 节经文。`);
-}
+        const refText = tds[0].textContent.replace(/\s+/g, '').trim();
+        const verseText = tds[1].textContent.replace(/\s+/g, ' ').trim();
 
-function renderPreview() {
-  const tbody = document.getElementById('previewBody');
-  const countEl = document.getElementById('verseCount');
-  const exportBtn = document.getElementById('exportBtn');
+        if (!refText || !verseText) return;
 
-  if (parsedVerses.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="2"><div class="empty-state">解析经文后将在此显示预览</div></td></tr>';
-    countEl.textContent = '0 节';
-    exportBtn.disabled = true;
-    return;
-  }
+        const match = refText.match(/(\d+):(\d+)/);
+        if (!match) return;
 
-  countEl.textContent = `${parsedVerses.length} 节`;
-  exportBtn.disabled = false;
+        const verseNum = match[2];
 
-  tbody.innerHTML = parsedVerses.map(v => `
-    <tr>
-      <td class="ref-cell">${escHtml(v.ref)}</td>
-      <td class="verse-cell">${escHtml(v.text)}</td>
-    </tr>
-  `).join('');
-}
+        verses.push({
+          ref: `${BOOK_NAMES[book]} ${chapter}:${verseNum}`,
+          text: verseText
+        });
+      });
 
-function exportExcel() {
-  if (parsedVerses.length === 0) return;
+      parsedVerses = verses;
+      renderPreview();
+    }
 
-  const book = document.getElementById('bookSelect').value;
-  const chap = document.getElementById('chapterInput').value.trim();
+    function renderPreview() {
+      const body = document.getElementById('previewBody');
+      const count = document.getElementById('verseCount');
 
-  const ws_data = [['参考 Reference', '经文 Verse']];
-  parsedVerses.forEach(v => ws_data.push([v.ref, v.text]));
+      if (parsedVerses.length === 0) {
+        body.innerHTML = `
+          <tr>
+            <td colspan="2">
+              <div class="empty">没有经文</div>
+            </td>
+          </tr>
+        `;
+        count.textContent = `0 节经文`;
+        return;
+      }
 
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+      count.textContent = `${parsedVerses.length} 节经文`;
 
-  // Column widths
-  ws['!cols'] = [{ wch: 22 }, { wch: 80 }];
+      body.innerHTML = parsedVerses.map(v => `
+        <tr>
+          <td class="ref">${escapeHTML(v.ref)}</td>
+          <td>${escapeHTML(v.text)}</td>
+        </tr>
+      `).join('');
+    }
 
-  // Style header row (basic)
-  const headerStyle = { font: { bold: true, color: { rgb: 'C9A96E' } }, fill: { fgColor: { rgb: '1A1917' } } };
-  ['A1', 'B1'].forEach(cell => {
-    if (ws[cell]) ws[cell].s = headerStyle;
-  });
+    function exportExcel() {
+      if (parsedVerses.length === 0) {
+        alert('没有经文可以导出，请先成功加载章节');
+        return;
+      }
 
-  XLSX.utils.book_append_sheet(wb, ws, `${book} 第${chap}章`);
+      const wsData = [
+        ['Reference', 'Verse']
+      ];
 
-  const filename = `${book}_第${chap}章.xlsx`;
-  XLSX.writeFile(wb, filename);
-}
+      parsedVerses.forEach(v => {
+        wsData.push([v.ref, v.text]);
+      });
 
-function clearAll() {
-  document.getElementById('scriptureInput').value = '';
-  document.getElementById('parseMsg').className = 'msg';
-  parsedVerses = [];
-  renderPreview();
-}
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-function showMsg(type, text) {
-  const el = document.getElementById('parseMsg');
-  el.className = `msg ${type}`;
-  el.textContent = text;
-}
+      ws['!cols'] = [
+        { wch: 24 },
+        { wch: 120 }
+      ];
 
-function escHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-</script>
+      XLSX.utils.book_append_sheet(wb, ws, 'Scripture');
+
+      const book = document.getElementById('bookSelect').value;
+      const chapter = document.getElementById('chapterInput').value;
+      const filename = `${BOOK_NAMES[book]}_第${chapter}章.xlsx`;
+
+      XLSX.writeFile(wb, filename);
+    }
+
+    function escapeHTML(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+  </script>
+
 </body>
+
 </html>
