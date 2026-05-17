@@ -292,6 +292,16 @@
           <input type="number" id="chapterInput" min="1" value="1">
         </div>
 
+        <div class="form-group">
+          <label>文件编码 Encoding</label>
+          <select id="encodingSelect">
+            <option value="gbk" selected>GBK / GB2312</option>
+            <option value="utf-8">UTF-8</option>
+            <option value="big5">Big5 (繁体旧格式)</option>
+          </select>
+        </div>
+      </div>
+
       <div class="btn-row" style="margin-top:1rem;">
         <button class="btn-primary" onclick="loadChapter()">
           加载章节
@@ -357,8 +367,7 @@
     async function loadChapter() {
       const book = document.getElementById('bookSelect').value;
       const chapter = document.getElementById('chapterInput').value;
-      const encodingMode = 'gbk';
-      //const encodingMode = document.getElementById('encodingSelect').value;
+      const encodingMode = document.getElementById('encodingSelect').value;
       const path = `https://imkelvinnnnn.github.io/BibleScriptureForCanva/OnlineBible/OnlineBible/hgb/${book}/${book}${chapter}.htm`;
 
       try {
