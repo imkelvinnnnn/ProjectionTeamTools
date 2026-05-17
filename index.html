@@ -7,19 +7,19 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
-    --bg: #0f0e0d;
-    --surface: #1a1917;
-    --surface2: #242320;
-    --border: rgba(255,255,255,0.08);
-    --border-hover: rgba(255,255,255,0.18);
-    --text: #f0ede8;
-    --text-muted: #8a8680;
-    --text-dim: #5a5754;
-    --accent: #c9a96e;
-    --accent-dark: #a07840;
-    --accent-glow: rgba(201,169,110,0.12);
-    --success: #4a9e6b;
-    --danger: #c25e5e;
+    --bg: #f5f2ed;
+    --surface: #ffffff;
+    --surface2: #f0ece6;
+    --border: rgba(0,0,0,0.09);
+    --border-hover: rgba(0,0,0,0.18);
+    --text: #1e1a15;
+    --text-muted: #6b6560;
+    --text-dim: #a09890;
+    --accent: #8b5e2a;
+    --accent-dark: #6b4418;
+    --accent-glow: rgba(139,94,42,0.08);
+    --success: #2e7d4f;
+    --danger: #a33030;
     --radius: 10px;
     --radius-lg: 16px;
   }
@@ -27,7 +27,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    background: var(--bg);
+    background: var(--surface);
     color: var(--text);
     font-family: 'Georgia', '宋体', serif;
     min-height: 100vh;
@@ -132,7 +132,7 @@
 
   select option[disabled] {
     color: var(--text-dim);
-    background: var(--bg);
+    background: var(--surface);
     font-style: italic;
   }
 
@@ -182,7 +182,7 @@
 
   .btn-primary {
     background: var(--accent);
-    color: #1a1510;
+    color: #ffffff;
     border-color: var(--accent);
     font-weight: 600;
   }
@@ -556,7 +556,7 @@ function exportExcel() {
   const book = document.getElementById('bookSelect').value;
   const chap = document.getElementById('chapterInput').value.trim();
 
-  const ws_data = [['书', '经文']];
+  const ws_data = [['参考 Reference', '经文 Verse']];
   parsedVerses.forEach(v => ws_data.push([v.ref, v.text]));
 
   const wb = XLSX.utils.book_new();
